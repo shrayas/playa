@@ -15,13 +15,18 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     player.cpp \
-    manager.cpp
+    manager.cpp \
+    settingswindow.cpp \
+    lastfm_helper.cpp
 
 HEADERS  += mainwindow.h \
     manager.h \
-    player.h
+    player.h \
+    settingswindow.h \
+    lastfm_helper.h
 
 FORMS    += mainwindow.ui \
+    settingswindow.ui
 
-LIBS += -lvlc -ltag -lsqlite3
+LIBS += -lvlc -ltag -lsqlite3 -lcurl -lssl -ljsonxx -lcrypto
 CONFIG += c++11

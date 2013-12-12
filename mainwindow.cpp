@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "QDebug"
+#include "settingswindow.h"
 
 static int c_new_media_to_list(void *param, int argc, char **argv, char **azColName)
 {
@@ -24,8 +25,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
   manager::manager_init();
   player::player_init();
+  lastfm_helper::lastfm_helper_init();
+  lastfm_helper::on_user_should_auth = std::bind(&MainWindow::open_browser_to_auth,this,_1);
+  lastfm_helper::authenticate();
 
-  //manager::get_new_media_files("/media/karthik/Out/Music");
+
+//  manager::get_new_media_files("/media/karthik/Out/Music");
   player::on_time_changed_cb = std::bind(&MainWindow::time_changed, this, _1);
 
   ui->media_item_tableWidget->setColumnCount(4);
@@ -72,8 +77,18 @@ void MainWindow::new_media_to_list(map<string, string> media_data){
   //std::cout << media_data["title"] << media_data["album"]<< media_data["artist"] << media_data["rowid"] << std::endl;
 }
 
+void MainWindow::open_browser_to_auth(string Url){
+    QDesktopServices::openUrl(QUrl(Url.c_str()));
+}
+
 void MainWindow::on_media_item_tableWidget_itemDoubleClicked(QTableWidgetItem *item)
 {
   int row_id = ui->media_item_tableWidget->item(item->row(),3)->text().toInt();
   player::set_media(row_id);
+}
+
+void MainWindow::on_settings_bt_clicked()
+{
+    settings = new settingswindow(this);
+    settings->show();
 }

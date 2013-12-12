@@ -27,7 +27,7 @@ namespace manager{
 
   int get_file_info(const char *, const struct stat *,int, struct FTW *);
 
-  extern string db_MIGRATE[2];
+  extern string db_MIGRATE[3];
   extern sqlite3 *db;
   extern string db_file_name;
 

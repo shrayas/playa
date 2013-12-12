@@ -79,7 +79,7 @@ namespace player{
   int inc_playcount(std::string row_id){
     // if update fails do an insert
     if (db_EXECUTE("UPDATE tracks_user_data SET playcount = playcount + 1 WHERE track_id = "+row_id) 
-        == 1){
+        == 0){
       db_EXECUTE("INSERT INTO tracks_user_data(track_id,playcount) VALUES("+row_id+",1); ");
     }
     return 1;
