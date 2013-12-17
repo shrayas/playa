@@ -1,7 +1,5 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "QDebug"
-#include "settingswindow.h"
 
 static int c_new_media_to_list(void *param, int argc, char **argv, char **azColName)
 {
@@ -18,77 +16,148 @@ static int c_new_media_to_list(void *param, int argc, char **argv, char **azColN
 
 MainWindow::MainWindow(QWidget *parent) :
   QMainWindow(parent),
-  ui(new Ui::MainWindow)
-{
-  ui->setupUi(this);
-  using namespace std::placeholders;
+  ui(new Ui::MainWindow){
+    ui->setupUi(this);
+    using namespace std::placeholders;
 
-  manager::manager_init();
-  player::player_init();
-  lastfm_helper::lastfm_helper_init();
-  lastfm_helper::on_user_should_auth = std::bind(&MainWindow::open_browser_to_auth,this,_1);
-  lastfm_helper::authenticate();
+    manager::manager_init();
+    player::player_init();
+    lastfm_helper::lastfm_helper_init();
+    lastfm_helper::on_user_should_auth = 
+      std::bind(&MainWindow::open_browser_to_auth,this,_1);
+    //  lastfm_helper::authenticate();
 
+    //  manager::get_new_media_files("/media/karthik/Out/Music");
+    player::on_time_changed_cb = std::bind(&MainWindow::time_changed, this, _1);
+    player::on_play_toggled = std::bind(&MainWindow::play_toggled, this, _1);
+    player::on_end_reached = std::bind(&MainWindow::find_next_track, this, _1);
 
-//  manager::get_new_media_files("/media/karthik/Out/Music");
-  player::on_time_changed_cb = std::bind(&MainWindow::time_changed, this, _1);
+    ui->media_item_tableWidget->setColumnCount(3);
 
-  ui->media_item_tableWidget->setColumnCount(4);
+    ui->media_item_tableWidget->setHorizontalHeaderItem(
+        0,new QTableWidgetItem(QString("Title"),QTableWidgetItem::Type));
+    ui->media_item_tableWidget->setHorizontalHeaderItem(
+        1,new QTableWidgetItem(QString("Artist"),QTableWidgetItem::Type));
+    ui->media_item_tableWidget->setHorizontalHeaderItem(
+        2,new QTableWidgetItem(QString("Album"),QTableWidgetItem::Type));
 
-  ui->media_item_tableWidget->setHorizontalHeaderItem(0,new QTableWidgetItem(QString("Title"),QTableWidgetItem::Type));
-  ui->media_item_tableWidget->setHorizontalHeaderItem(1,new QTableWidgetItem(QString("Artist"),QTableWidgetItem::Type));
-  ui->media_item_tableWidget->setHorizontalHeaderItem(2,new QTableWidgetItem(QString("Album"),QTableWidgetItem::Type));
-  ui->media_item_tableWidget->setHorizontalHeaderItem(3,new QTableWidgetItem(QString("Id"),QTableWidgetItem::Type));
-  //ui->media_item_tableWidget->horizontalHeader()->setStretchLastSection(true);
-  //manager::get_display_files();
-  manager::db_EXECUTE("SELECT title,album,artist,rowid FROM tracks",c_new_media_to_list,this);
-  //ui->media_item_tableWidget->setRowCount(0);
-}
+    manager::db_EXECUTE("SELECT title,album,artist,rowid FROM tracks"
+        ,c_new_media_to_list,this);
+    ui->media_item_tableWidget->resizeColumnsToContents();
+  }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow(){
   delete ui;
   manager::manager_shutdown();
   player::player_shutdown();
 }
 
-void MainWindow::on_play_bt_clicked()
+// EVENTS
+
+void MainWindow::new_media_to_list(map<string, string> media_data){
+  int row_no = ui->media_item_tableWidget->rowCount();
+  ui->media_item_tableWidget->insertRow(row_no);
+
+  // set the title and add set the sqlite rowid as the a data
+  QTableWidgetItem *title_itm = new QTableWidgetItem(media_data["title"].c_str());
+  title_itm->setData(Qt::UserRole,media_data["rowid"].c_str());
+  ui->media_item_tableWidget->setItem(row_no,0,title_itm);
+
+  ui->media_item_tableWidget->setItem(
+      row_no,1,new QTableWidgetItem(media_data["artist"].c_str()));
+  ui->media_item_tableWidget->setItem(
+      row_no,2,new QTableWidgetItem(media_data["album"].c_str()));
+}
+
+void MainWindow::open_browser_to_auth(string Url){
+  QDesktopServices::openUrl(QUrl(Url.c_str()));
+}
+
+// VLC EVENTS
+
+void MainWindow::time_changed(float time){
+  if(!slider_pressed)
+    ui->time_slider->setValue(ui->time_slider->maximum() * time);
+}
+
+void MainWindow::play_toggled(int play_state){
+  // if playing set the text to pause
+  if(play_state == 1){
+    ui->play_bt->setText("Pause");
+  }
+  else{
+    ui->play_bt->setText("Play");
+  }
+}
+
+// called when the next track is needed or when current track ends
+void MainWindow::find_next_track(int){
+  int selected_row_id = -1;
+
+  if (ui->shuffle_bt->isChecked()){
+    std::random_device rd; // obtain a random number from hardware
+    std::mt19937 eng(rd()); // seed the generator
+    std::uniform_int_distribution<> distr(
+        1, ui->media_item_tableWidget->rowCount()); // the range
+
+    // make sure its not the same
+    do { selected_row_id = distr(eng); } 
+    while(current_item_row_id == selected_row_id);
+  }
+  else
+    selected_row_id = current_item_row_id + 1;
+
+  on_media_item_tableWidget_itemDoubleClicked(
+      ui->media_item_tableWidget->item(selected_row_id,0));
+}
+
+// VLC EVENTS END
+
+// SLOTS
+
+void MainWindow::on_media_item_tableWidget_itemDoubleClicked(QTableWidgetItem *item)
 {
+  // get the rowid stored in the title, play the track
+  current_item_row_id = item->row();
+
+  previous_row_id = current_row_id; // we'll use this when going to previously played track
+  current_row_id = item->data(Qt::UserRole).toInt();
+  player::set_media(current_row_id);
+}
+
+void MainWindow::on_time_slider_valueChanged(int value){
+  if(slider_pressed)
+    new_seek_value = value;
+}
+
+void MainWindow::on_time_slider_sliderPressed(){
+  slider_pressed = true;
+}
+
+void MainWindow::on_time_slider_sliderReleased(){
+  slider_pressed = false;
+  player::seek_to((float)new_seek_value/(float)ui->time_slider->maximum());
+}
+
+void MainWindow::on_play_bt_clicked(){
   if (player::is_playing == 1)
     player::pause();
   else
     player::play();
 }
 
-void MainWindow::time_changed(float time){
-  //qDebug() << time;
-  ui->time_slider->setValue(10000000 * time);
+
+void MainWindow::on_prev_bt_clicked(){
+  player::set_media(previous_row_id); // previous -> previous plays the same track again, to fix or not to fix ?
 }
 
-void MainWindow::new_media_to_list(map<string, string> media_data){
-  int row_no = ui->media_item_tableWidget->rowCount();
-  //ui->media_item_tableWidget->setRowCount(10);
-  ui->media_item_tableWidget->insertRow(row_no);
-  //ui->media_item_tableWidget->setItem(row_no,0,new QTableWidgetItem("bOOM!!"));
-  ui->media_item_tableWidget->setItem(row_no,0,new QTableWidgetItem(media_data["title"].c_str()));
-  ui->media_item_tableWidget->setItem(row_no,1,new QTableWidgetItem(media_data["artist"].c_str()));
-  ui->media_item_tableWidget->setItem(row_no,2,new QTableWidgetItem(media_data["album"].c_str()));
-  ui->media_item_tableWidget->setItem(row_no,3,new QTableWidgetItem(media_data["rowid"].c_str()));
-  //std::cout << media_data["title"] << media_data["album"]<< media_data["artist"] << media_data["rowid"] << std::endl;
+void MainWindow::on_next_bt_clicked(){
+  find_next_track(-1);
 }
 
-void MainWindow::open_browser_to_auth(string Url){
-    QDesktopServices::openUrl(QUrl(Url.c_str()));
+void MainWindow::on_settings_bt_clicked(){
+  settings = new settingswindow(this);
+  settings->show();
 }
 
-void MainWindow::on_media_item_tableWidget_itemDoubleClicked(QTableWidgetItem *item)
-{
-  int row_id = ui->media_item_tableWidget->item(item->row(),3)->text().toInt();
-  player::set_media(row_id);
-}
-
-void MainWindow::on_settings_bt_clicked()
-{
-    settings = new settingswindow(this);
-    settings->show();
-}
+// SLOTS END

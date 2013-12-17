@@ -21,7 +21,7 @@ namespace manager{
       "rating INT DEFAULT 0" \
       ");"
       ,
-          "CREATE TABLE IF NOT EXISTS config_vars(" \
+    "CREATE TABLE IF NOT EXISTS config_vars(" \
       "key TEXT PRIMARY KEY," \
       "value TEXT" \
       ");"
@@ -41,17 +41,17 @@ namespace manager{
     for(string sql: db_MIGRATE)
       db_EXECUTE(sql);
 
-
   }
 
   void get_new_media_files(string file_path){
-    if (nftw(file_path.c_str(), manager::get_file_info, 20, FTW_DEPTH|FTW_PHYS) == -1) {
+    if (nftw(file_path.c_str(), manager::get_file_info, 20, FTW_DEPTH|FTW_PHYS) 
+        == -1) {
       printf("some error =======/n ");
     }
   }
 
-  int get_file_info(const char *fpath, const struct stat *,int tflag, struct FTW *) {
-
+  int get_file_info(const char *fpath, const struct stat *,
+      int tflag, struct FTW *) {
     if (tflag != FTW_F)
       return 0;
 
@@ -76,8 +76,7 @@ namespace manager{
       if(!f.file()->isValid())
         return 0;
 
-/*      tr_title = str::replace(tr_title.start(),tr_title.end()) = ((f.tag()->title() == TagLib::String::null)
-              ? fpath : f.tag()->title().to8Bit(true));*/
+      // TODO : sanitize before inserting
 
       if(db_EXECUTE("INSERT INTO " \
             "tracks(title,album,artist,comment,genre,year,track,file_path) VALUES(" \
@@ -97,15 +96,12 @@ namespace manager{
             ")") == 0)
         printf("commit to tracks failed, %s \n ", sqlite3_errmsg(db));
       if(db_EXECUTE("INSERT INTO " \
-            "tracks_user_data(track_id) VALUES("+std::to_string(sqlite3_last_insert_rowid(db))+")")
+            "tracks_user_data(track_id) VALUES(" \
+            +std::to_string(sqlite3_last_insert_rowid(db))+")")
           == 0)
         printf("commit to tracks_user_data failed, %s \n ", sqlite3_errmsg(db));
     }
     return 0;           
-  }
-
-  void get_display_files(int (*callback)(void*,int,char**,char**), void *data){
-    db_EXECUTE("SELECT title,album,artist,rowid FROM tracks",callback,data);
   }
 
   int db_EXECUTE(string sql){

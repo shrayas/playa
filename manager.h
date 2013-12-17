@@ -19,7 +19,6 @@ namespace manager{
   void manager_shutdown();
 
   void get_new_media_files(string);
-  void get_display_files(int (*callback)(void*,int,char**,char**), void *data);
 
   int db_EXECUTE(string);
   int db_EXECUTE(string,int (*)(void*,int,char**,char**), void (*));

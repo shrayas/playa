@@ -33,12 +33,25 @@ namespace lastfm_helper{
     return true;
   }
 
-  bool lastfm_helper_shutdown() {return true;}
+  bool lastfm_helper_shutdown() {
+    return true;
+  }
+
   bool track_love(string title,string artist){ return false;}
+
   bool track_unlove(string title,string artist){ return false;}
-  bool _no_lastfm(){return false;}
+
+  bool _has_lastfm(){
+    if(username == "" || sk == "")
+      return false;
+    return true;
+  }
 
   bool authenticate(){
+    // well they are required
+    if(api_key == "" || api_secret == "")
+      return false;
+
     CURL *rl_get_request_token;
     string token_response, sk_response;
     int retry_count = 0;
@@ -50,6 +63,7 @@ namespace lastfm_helper{
     getToken_urlparams["format"] = "json";
     getToken_urlparams["method"] = "auth.gettoken";
 
+    // CURL, get a token for authing against
     string getToken_url = "https://ws.audioscrobbler.com/2.0/"+gen_qrystr(getToken_urlparams);
     char * getToken_url_c = new char[getToken_url.length() + 1];
     std::strcpy(getToken_url_c,getToken_url.c_str());
@@ -63,7 +77,7 @@ namespace lastfm_helper{
       curl_easy_setopt(rl_get_request_token, CURLOPT_WRITEDATA, &token_response);
 
       if(curl_easy_perform(rl_get_request_token) != CURLE_OK){
-//        printf("not ok \n %s");
+        //        printf("not ok \n %s");
         return false;
       }
       curl_easy_cleanup(rl_get_request_token);
@@ -72,6 +86,8 @@ namespace lastfm_helper{
       return false;
 
     token = (string)(((Object)parse_string(token_response))["token"]);
+
+    // the user will have to login so as to auth the token
     on_user_should_auth("https://www.last.fm/api/auth/?api_key="+api_key+"&token="+token);
 
     getSession_urlparams["api_key"] = api_key;
@@ -84,6 +100,8 @@ namespace lastfm_helper{
     char * getSession_url_c = new char[getSession_url.length() + 1];
     std::strcpy(getSession_url_c,getSession_url.c_str());
 
+    // try 5 times (sleeping while the user is authing) to check if the user has signed and if the token goes through
+    // get an sessionkey (sk) to use in future sessions
     do{
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
       rl_get_request_token = curl_easy_init();

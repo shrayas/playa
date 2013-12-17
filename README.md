@@ -1,4 +1,4 @@
 playa
 =====
 
-a music manager WIP 
+a music manager 
