@@ -26,9 +26,10 @@ namespace player{
   void setup_mp();
 
   // callback registrants
-  extern function <void(float)> on_time_changed_cb;
-  extern function <void(int)> on_play_toggled;
-  extern function <void(int)> on_end_reached;
+  extern function <void(float)> time_changed;
+  extern function <void(int)> play_toggled;
+  extern function <void(int)> end_reached;
+  extern function <void(std::map<string,string>)> media_changed;
 
   extern int is_playing;
   extern string current_track_loc;

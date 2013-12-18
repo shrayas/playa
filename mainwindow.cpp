@@ -28,9 +28,10 @@ MainWindow::MainWindow(QWidget *parent) :
     //  lastfm_helper::authenticate();
 
     //  manager::get_new_media_files("/media/karthik/Out/Music");
-    player::on_time_changed_cb = std::bind(&MainWindow::time_changed, this, _1);
-    player::on_play_toggled = std::bind(&MainWindow::play_toggled, this, _1);
-    player::on_end_reached = std::bind(&MainWindow::find_next_track, this, _1);
+    player::time_changed = std::bind(&MainWindow::on_time_changed, this, _1);
+    player::play_toggled = std::bind(&MainWindow::on_play_toggled, this, _1);
+    player::end_reached = std::bind(&MainWindow::on_end_reached, this, _1);
+    player::media_changed = std::bind(&MainWindow::on_media_changed, this, _1);
 
     ui->media_item_tableWidget->setColumnCount(3);
 
@@ -50,6 +51,28 @@ MainWindow::~MainWindow(){
   delete ui;
   manager::manager_shutdown();
   player::player_shutdown();
+}
+
+// called when the next track is needed or when current track ends
+// move to player?/manager?
+void MainWindow::find_next_track(int){
+  int selected_row_id = -1;
+
+  if (ui->shuffle_bt->isChecked()){
+    std::random_device rd; // obtain a random number from hardware
+    std::mt19937 eng(rd()); // seed the generator
+    std::uniform_int_distribution<> distr(
+        1, ui->media_item_tableWidget->rowCount()); // the range
+
+    // make sure its not the same
+    do { selected_row_id = distr(eng); } 
+    while(current_item_row_id == selected_row_id);
+  }
+  else
+    selected_row_id = current_item_row_id + 1;
+
+  on_media_item_tableWidget_itemDoubleClicked(
+      ui->media_item_tableWidget->item(selected_row_id,0));
 }
 
 // EVENTS
@@ -73,14 +96,14 @@ void MainWindow::open_browser_to_auth(string Url){
   QDesktopServices::openUrl(QUrl(Url.c_str()));
 }
 
-// VLC EVENTS
+// player EVENTS
 
-void MainWindow::time_changed(float time){
+void MainWindow::on_time_changed(float time){
   if(!slider_pressed)
     ui->time_slider->setValue(ui->time_slider->maximum() * time);
 }
 
-void MainWindow::play_toggled(int play_state){
+void MainWindow::on_play_toggled(int play_state){
   // if playing set the text to pause
   if(play_state == 1){
     ui->play_bt->setText("Pause");
@@ -90,28 +113,14 @@ void MainWindow::play_toggled(int play_state){
   }
 }
 
-// called when the next track is needed or when current track ends
-void MainWindow::find_next_track(int){
-  int selected_row_id = -1;
-
-  if (ui->shuffle_bt->isChecked()){
-    std::random_device rd; // obtain a random number from hardware
-    std::mt19937 eng(rd()); // seed the generator
-    std::uniform_int_distribution<> distr(
-        1, ui->media_item_tableWidget->rowCount()); // the range
-
-    // make sure its not the same
-    do { selected_row_id = distr(eng); } 
-    while(current_item_row_id == selected_row_id);
-  }
-  else
-    selected_row_id = current_item_row_id + 1;
-
-  on_media_item_tableWidget_itemDoubleClicked(
-      ui->media_item_tableWidget->item(selected_row_id,0));
+void MainWindow::on_end_reached(int){
+  find_next_track(-1);
 }
 
-// VLC EVENTS END
+void MainWindow::on_media_changed(map<string,string> track_data){
+}
+// player EVENTS END
+
 
 // SLOTS
 
@@ -145,7 +154,6 @@ void MainWindow::on_play_bt_clicked(){
   else
     player::play();
 }
-
 
 void MainWindow::on_prev_bt_clicked(){
   player::set_media(previous_row_id); // previous -> previous plays the same track again, to fix or not to fix ?

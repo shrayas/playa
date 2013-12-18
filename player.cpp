@@ -9,10 +9,13 @@ static int c_set_media_cb(void *, int , char **argv, char **) {
 
 namespace player{
 
-  function <void(float)> on_time_changed_cb = nullptr;
-  function <void(int)> on_play_toggled = nullptr;
-  function <void(int)> on_end_reached= nullptr;
+  function <void(float)> time_changed = nullptr;
+  function <void(int)> play_toggled = nullptr;
+  function <void(int)> end_reached = nullptr;
+  function <void(std::map<string,string>)> media_changed = nullptr;
+
   int is_playing = -1;
+
   libvlc_instance_t *inst = nullptr;
   libvlc_media_player_t *mp = nullptr;
   libvlc_event_manager_t *event = nullptr;
@@ -68,7 +71,11 @@ namespace player{
     setup_mp();
 
     libvlc_media_player_set_media(mp,libvlc_media_new_path (inst, path.c_str()));
+
+    // we'll play first since vlc does it asycn
     return play();
+
+//    media_changed(track_data);
   }
 
   int set_media(int row_id){
@@ -103,23 +110,23 @@ namespace player{
     switch(event->type){
       case libvlc_MediaPlayerEndReached:
         {
-          on_end_reached(0);
+          end_reached(0);
           break;
         }
       case libvlc_MediaPlayerPaused:
         {
-          on_play_toggled(0);
+          play_toggled(0);
           break;
         }
       case libvlc_MediaPlayerPlaying:
         {
-          on_play_toggled(1);
+          play_toggled(1);
           break;
         }
       case libvlc_MediaPlayerPositionChanged:
         {
           float post = libvlc_media_player_get_position(player::mp);
-          on_time_changed_cb(post);
+          time_changed(post);
           break;
         }
       default:

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>642</width>
-    <height>295</height>
+    <width>800</width>
+    <height>400</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -15,6 +15,12 @@
     <horstretch>0</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>800</width>
+    <height>400</height>
+   </size>
   </property>
   <property name="maximumSize">
    <size>
@@ -45,7 +51,7 @@
     <item row="2" column="0">
      <widget class="QTableWidget" name="media_item_tableWidget">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+       <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -223,7 +229,7 @@
              <bool>true</bool>
             </property>
             <property name="text">
-             <string>Title</string>
+             <string>--</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
@@ -241,7 +247,7 @@
              <string notr="true"/>
             </property>
             <property name="text">
-             <string>TextLabel</string>
+             <string>--</string>
             </property>
            </widget>
           </item>
@@ -314,7 +320,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>642</width>
+     <width>800</width>
      <height>22</height>
     </rect>
    </property>

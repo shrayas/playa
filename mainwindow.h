@@ -33,9 +33,6 @@ class MainWindow : public QMainWindow
     void new_media_to_list(map<string, string>);
     settingswindow *settings;
     
-    void time_changed(float);
-    void play_toggled(int);
-    void find_next_track(int);
 
    private slots:
     void on_play_bt_clicked();
@@ -54,6 +51,15 @@ class MainWindow : public QMainWindow
     int previous_row_id = 0;
     int new_seek_value = 0;
     bool slider_pressed = false;
+
+    void find_next_track(int);
+
+    // events
+    void on_time_changed(float);
+    void on_play_toggled(int);
+    void on_end_reached(int);
+    void on_media_changed(map<string,string>);
+
 };
 
 #endif // MAINWINDOW_H
