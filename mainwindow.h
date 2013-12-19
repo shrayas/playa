@@ -6,6 +6,7 @@
 #include <QDesktopServices>
 #include <QUrl>
 #include <QDebug>
+#include <QString>
 
 #include <random>
 
@@ -51,6 +52,8 @@ class MainWindow : public QMainWindow
     int previous_row_id = 0;
     int new_seek_value = 0;
     bool slider_pressed = false;
+    QString title_lbl_def;
+    QString artist_lbl_def;
 
     void find_next_track(int);
 

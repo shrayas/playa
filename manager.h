@@ -19,6 +19,8 @@ namespace manager{
   void manager_shutdown();
 
   void get_new_media_files(string);
+  string search_friendly(string);
+  string sanitize_track_data(TagLib::String,string);
 
   int db_EXECUTE(string);
   int db_EXECUTE(string,int (*)(void*,int,char**,char**), void (*));

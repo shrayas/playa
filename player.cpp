@@ -7,6 +7,14 @@ static int c_set_media_cb(void *, int , char **argv, char **) {
   return 1;
 }
 
+static int c_media_changed_cb(void *, int argc, char **argv, char**azColName){
+    map<string,string> track_data;
+    for(int i=0; i<argc; i++)
+        track_data[azColName[i]] = argv[i] ? argv[i] : NULL;
+    player::media_changed(track_data);
+    return 1;
+}
+
 namespace player{
 
   function <void(float)> time_changed = nullptr;
@@ -73,9 +81,11 @@ namespace player{
     libvlc_media_player_set_media(mp,libvlc_media_new_path (inst, path.c_str()));
 
     // we'll play first since vlc does it asycn
-    return play();
+    play();
 
-//    media_changed(track_data);
+    db_EXECUTE("SELECT title, album, artist FROM tracks WHERE file_path = '"+path+"'",c_media_changed_cb,0);
+
+    return 1;
   }
 
   int set_media(int row_id){

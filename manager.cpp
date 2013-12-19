@@ -6,12 +6,16 @@ namespace manager{
   {
     "CREATE TABLE IF NOT EXISTS tracks("  \
       "title TEXT NOT NULL," \
+      "title_search TEXT NOT NULL," \
       "album TEXT," \
+      "album_search TEXT," \
       "artist TEXT," \
+      "artist_search TEXT," \
       "comment TEXT," \
       "genre TEXT," \
       "year INT," \
       "track INT," \
+      "duration INT," \
       "file_path TEXT UNIQUE" \
       ");"
       ,
@@ -50,6 +54,7 @@ namespace manager{
     }
   }
 
+  // this is slow!!
   int get_file_info(const char *fpath, const struct stat *,
       int tflag, struct FTW *) {
     if (tflag != FTW_F)
@@ -57,10 +62,10 @@ namespace manager{
 
     string allowed_extensions[] = {"mp3","m4a","wma","flac"};
 
-    string tr_title, tr_artist, tr_album, tr_comment, tr_genre, 
-           tr_title_sanitized, tr_album_sanitized, tr_artist_sanitized;
-
-    int last_insert_row_id;
+    string tr_title, tr_artist, tr_album,
+           tr_comment, tr_genre,
+           tr_year, tr_track,
+           tr_title_searchable, tr_album_searchable, tr_artist_searchable;
 
     // get the extension
     string file_ext = string(fpath).substr(string(fpath).find_last_of(".") + 1);
@@ -76,22 +81,31 @@ namespace manager{
       if(!f.file()->isValid())
         return 0;
 
-      // TODO : sanitize before inserting
+      tr_title = sanitize_track_data(f.tag()->title(),fpath);
+      tr_album = sanitize_track_data(f.tag()->album(),"");
+      tr_artist = sanitize_track_data(f.tag()->artist(),"");
+      tr_comment = sanitize_track_data(f.tag()->comment(),"");
+      tr_genre = sanitize_track_data(f.tag()->genre(),"");
+      tr_year = sanitize_track_data(std::to_string(f.tag()->year()),"");
+      tr_track = sanitize_track_data(std::to_string(f.tag()->track()),"");
+
+      tr_title_searchable = search_friendly(tr_title);
+      tr_album_searchable = search_friendly(tr_album);
+      tr_artist_searchable = search_friendly(tr_artist);
 
       if(db_EXECUTE("INSERT INTO " \
-            "tracks(title,album,artist,comment,genre,year,track,file_path) VALUES(" \
-            "'"+ ((f.tag()->title() == TagLib::String::null)
-              ? fpath : f.tag()->title().to8Bit(true))+ "'," \
-            "'"+((f.tag()->album() == TagLib::String::null)
-              ? "" : f.tag()->album().to8Bit(true))+"'," \
-            "'"+((f.tag()->artist() == TagLib::String::null)
-              ? "" : f.tag()->artist().to8Bit(true))+"'," \
-            "'"+((f.tag()->comment() == TagLib::String::null)
-              ? "" : f.tag()->comment().to8Bit(true))+"'," \
-            "'"+((f.tag()->genre() == TagLib::String::null)
-              ? "" : f.tag()->genre().to8Bit(true))+"',"
-            + std::to_string(f.tag()->year())+"," \
-            + std::to_string(f.tag()->track())+"," \
+            "tracks(title,title_search,album,album_search,artist,artist_search,comment,genre,year,track,duration,file_path) VALUES(" \
+            "'"+ tr_title + "'," \
+            "'"+ tr_title_searchable + "'," \
+            "'"+ tr_album + "'," \
+            "'"+ tr_album_searchable + "'," \
+            "'"+ tr_artist +"'," \
+            "'"+ tr_artist_searchable +"'," \
+            "'"+ tr_comment +"'," \
+            "'"+ tr_genre +"',"
+            + tr_year+"," \
+            + tr_track+"," \
+            + std::to_string(f.audioProperties()->length())+"," \
             "'"+fpath+"'"
             ")") == 0)
         printf("commit to tracks failed, %s \n ", sqlite3_errmsg(db));
@@ -118,6 +132,40 @@ namespace manager{
       return 0;
     }
     return 1;
+  }
+
+  string sanitize_track_data(TagLib::String taglib_data,string alt){
+
+    string data = ((taglib_data == TagLib::String::null)
+        ? alt : taglib_data.to8Bit(true));
+    if(data.empty())
+        return alt;
+
+    string final_str;
+
+    int i = -1;
+    while(data[++i]){
+        if(data[i] == '\\' || data[i] == '\'')
+            final_str += '\\';
+        final_str += data[i];
+    }
+
+    // todo real sanitisation
+    return final_str;
+  }
+
+  string search_friendly(string data){
+    // lowercase
+    transform(data.begin(), data.end(), data.begin(), ::tolower);
+
+    string final_str;
+    int i=-1;
+    // remove non alphabets
+   while(data[++i])
+    if(isalpha(data[i]))
+        final_str += data[i];
+
+    return final_str;
   }
 
   void manager_shutdown(){

@@ -27,7 +27,8 @@ MainWindow::MainWindow(QWidget *parent) :
       std::bind(&MainWindow::open_browser_to_auth,this,_1);
     //  lastfm_helper::authenticate();
 
-    //  manager::get_new_media_files("/media/karthik/Out/Music");
+    // move this to settings
+   // manager::get_new_media_files("/media/karthik/Out/Music");
     player::time_changed = std::bind(&MainWindow::on_time_changed, this, _1);
     player::play_toggled = std::bind(&MainWindow::on_play_toggled, this, _1);
     player::end_reached = std::bind(&MainWindow::on_end_reached, this, _1);
@@ -45,6 +46,9 @@ MainWindow::MainWindow(QWidget *parent) :
     manager::db_EXECUTE("SELECT title,album,artist,rowid FROM tracks"
         ,c_new_media_to_list,this);
     ui->media_item_tableWidget->resizeColumnsToContents();
+
+    title_lbl_def = ui->title_lbl->text();
+    artist_lbl_def = ui->artist_lbl->text();
   }
 
 MainWindow::~MainWindow(){
@@ -114,10 +118,17 @@ void MainWindow::on_play_toggled(int play_state){
 }
 
 void MainWindow::on_end_reached(int){
+    ui->title_lbl->setText(title_lbl_def);
+    ui->artist_lbl->setText(artist_lbl_def);
   find_next_track(-1);
 }
 
 void MainWindow::on_media_changed(map<string,string> track_data){
+    ui->title_lbl->setText(QString(track_data["title"].c_str()));
+    if(track_data["artist"] != "")
+        ui->artist_lbl->setText(QString(track_data["artist"].c_str()));
+    else
+        ui->artist_lbl->setText(artist_lbl_def);
 }
 // player EVENTS END
 
