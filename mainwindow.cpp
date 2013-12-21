@@ -25,10 +25,10 @@ MainWindow::MainWindow(QWidget *parent) :
     lastfm_helper::lastfm_helper_init();
     lastfm_helper::on_user_should_auth = 
       std::bind(&MainWindow::open_browser_to_auth,this,_1);
-    //  lastfm_helper::authenticate();
+    //    lastfm_helper::authenticate();
 
     // move this to settings
-   // manager::get_new_media_files("/media/karthik/Out/Music");
+    // manager::get_new_media_files("/media/karthik/Out/Music");
     player::time_changed = std::bind(&MainWindow::on_time_changed, this, _1);
     player::play_toggled = std::bind(&MainWindow::on_play_toggled, this, _1);
     player::end_reached = std::bind(&MainWindow::on_end_reached, this, _1);
@@ -118,17 +118,17 @@ void MainWindow::on_play_toggled(int play_state){
 }
 
 void MainWindow::on_end_reached(int){
-    ui->title_lbl->setText(title_lbl_def);
-    ui->artist_lbl->setText(artist_lbl_def);
+  ui->title_lbl->setText(title_lbl_def);
+  ui->artist_lbl->setText(artist_lbl_def);
   find_next_track(-1);
 }
 
 void MainWindow::on_media_changed(map<string,string> track_data){
-    ui->title_lbl->setText(QString(track_data["title"].c_str()));
-    if(track_data["artist"] != "")
-        ui->artist_lbl->setText(QString(track_data["artist"].c_str()));
-    else
-        ui->artist_lbl->setText(artist_lbl_def);
+  ui->title_lbl->setText(QString(track_data["title"].c_str()));
+  if(track_data["artist"] != "")
+    ui->artist_lbl->setText(QString(track_data["artist"].c_str()));
+  else
+    ui->artist_lbl->setText(artist_lbl_def);
 }
 // player EVENTS END
 

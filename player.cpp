@@ -8,11 +8,10 @@ static int c_set_media_cb(void *, int , char **argv, char **) {
 }
 
 static int c_media_changed_cb(void *, int argc, char **argv, char**azColName){
-    map<string,string> track_data;
-    for(int i=0; i<argc; i++)
-        track_data[azColName[i]] = argv[i] ? argv[i] : NULL;
-    player::media_changed(track_data);
-    return 1;
+  for(int i=0; i<argc; i++)
+    player::track_data[azColName[i]] = argv[i] ? argv[i] : NULL;
+  player::media_changed(player::track_data);
+  return 1;
 }
 
 namespace player{
@@ -29,7 +28,8 @@ namespace player{
   libvlc_event_manager_t *event = nullptr;
   string current_track_loc;
   string current_track_rowid;
-
+  map<string,string> track_data;
+  bool scrobbled = false;
   // global @TODO: return a proper true/false/int 
 
   void player_init() {
@@ -84,6 +84,7 @@ namespace player{
     play();
 
     db_EXECUTE("SELECT title, album, artist FROM tracks WHERE file_path = '"+path+"'",c_media_changed_cb,0);
+    scrobbled = false;
 
     return 1;
   }
@@ -121,6 +122,7 @@ namespace player{
       case libvlc_MediaPlayerEndReached:
         {
           end_reached(0);
+          scrobbled = false;
           break;
         }
       case libvlc_MediaPlayerPaused:
@@ -136,6 +138,12 @@ namespace player{
       case libvlc_MediaPlayerPositionChanged:
         {
           float post = libvlc_media_player_get_position(player::mp);
+          // scrobble track when crossed half the length
+          // yeah there are known issues...
+          if(post > 0.5 && scrobbled == false){
+            std::async(std::launch::async,lastfm_helper::scrobble,track_data["title"],track_data["artist"],track_data["album"]);
+            scrobbled = true;
+          }
           time_changed(post);
           break;
         }

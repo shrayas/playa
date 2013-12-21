@@ -139,15 +139,15 @@ namespace manager{
     string data = ((taglib_data == TagLib::String::null)
         ? alt : taglib_data.to8Bit(true));
     if(data.empty())
-        return alt;
+      return alt;
 
     string final_str;
 
     int i = -1;
     while(data[++i]){
-        if(data[i] == '\\' || data[i] == '\'')
-            final_str += '\\';
-        final_str += data[i];
+      if(data[i] == '\\' || data[i] == '\'')
+        final_str += '\\';
+      final_str += data[i];
     }
 
     // todo real sanitisation
@@ -161,8 +161,8 @@ namespace manager{
     string final_str;
     int i=-1;
     // remove non alphabets
-   while(data[++i])
-    if(isalpha(data[i]))
+    while(data[++i])
+      if(isalpha(data[i]))
         final_str += data[i];
 
     return final_str;

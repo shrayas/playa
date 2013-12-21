@@ -10,6 +10,8 @@
 #include <functional>
 #include <chrono>
 #include <thread>
+#include <ctime>
+#include <sstream>
 #include "manager.h"
 
 using std::string;
@@ -20,16 +22,18 @@ using namespace JSON;
 
 namespace lastfm_helper
 {
-    bool lastfm_helper_init();
-    bool lastfm_helper_shutdown();
-    bool track_love(string,string);
-    bool track_unlove(string,string);
-    bool _has_lastfm();
-    bool authenticate();
+  bool lastfm_helper_init();
+  bool lastfm_helper_shutdown();
+  bool _has_lastfm();
+  bool authenticate();
 
-    string gen_qrystr(map<string,string>);
-    string gen_apisig(map<string,string>,string);
+  bool track_love(string,string);
+  bool track_unlove(string,string);
+  bool scrobble(string,string,string);
 
-    extern function <void(string)> on_user_should_auth;
+  string gen_qrystr(map<string,string>);
+  string gen_apisig(map<string,string>,string);
+
+  extern function <void(string)> on_user_should_auth;
 }
 #endif // LASTFM_HELPER_H

@@ -6,8 +6,10 @@
 #include <string>
 #include <unistd.h>
 #include <functional>
+#include <future>
 #include <vlc/vlc.h>
 #include "manager.h"
+#include "lastfm_helper.h"
 
 using std::string;
 using manager::db_EXECUTE;
@@ -37,6 +39,8 @@ namespace player{
   extern libvlc_instance_t *inst;
   extern libvlc_media_player_t *mp;
   extern libvlc_event_manager_t *event;
+  extern map<string,string> track_data;
+  extern bool scrobbled;
 
 }
 
