@@ -20,6 +20,7 @@ namespace player{
   function <void(int)> play_toggled = nullptr;
   function <void(int)> end_reached = nullptr;
   function <void(std::map<string,string>)> media_changed = nullptr;
+  function <void(int)> reset_gui = nullptr;
 
   int is_playing = -1;
 
@@ -83,8 +84,10 @@ namespace player{
     // we'll play first since vlc does it asycn
     play();
 
-    db_EXECUTE("SELECT title, album, artist FROM tracks WHERE file_path = '"+path+"'",c_media_changed_cb,0);
     scrobbled = false;
+    reset_gui(0);
+
+    db_EXECUTE("SELECT t.title AS title, t.album AS album, t.artist AS artist, tud.rating AS rating FROM tracks AS t INNER JOIN tracks_user_data AS tud ON tud.rowid = t.rowid WHERE t.file_path = '"+path+"'",c_media_changed_cb,0);
 
     return 1;
   }
@@ -116,6 +119,19 @@ namespace player{
     return 1;
   }
 
+  int track_up(bool up_down){
+
+    if(up_down)
+      db_EXECUTE("UPDATE tracks_user_data SET rating = 5 WHERE track_id = "+current_track_rowid);
+    else
+      db_EXECUTE("UPDATE tracks_user_data SET rating = 0 WHERE track_id = "+current_track_rowid);
+
+    //      lastfm_helper::track_love(up_down,track_data["title"],track_data["artist"],track_data["album"]);
+    std::async(std::launch::async,lastfm_helper::track_love,up_down,track_data["title"],track_data["artist"],track_data["album"]);
+
+    return 1;
+  }
+
   void callback(const libvlc_event_t *event, void *)
   {
     switch(event->type){
@@ -123,6 +139,7 @@ namespace player{
         {
           end_reached(0);
           scrobbled = false;
+          reset_gui(0);
           break;
         }
       case libvlc_MediaPlayerPaused:

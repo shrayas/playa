@@ -27,8 +27,7 @@ namespace lastfm_helper
   bool _has_lastfm();
   bool authenticate();
 
-  bool track_love(string,string);
-  bool track_unlove(string,string);
+  bool track_love(bool,string,string,string);
   bool scrobble(string,string,string);
 
   string gen_qrystr(map<string,string>);

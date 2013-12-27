@@ -40,9 +40,50 @@ namespace lastfm_helper{
     return true;
   }
 
-  bool track_love(string title,string artist){ return false;}
+  bool track_love(bool up_down, string title,string artist, string album){
+    if(!_has_lastfm())
+      return false;
 
-  bool track_unlove(string title,string artist){ return false;}
+    map<string,string> params;
+    CURL *love_req; // ugh! the name
+    string post_fields,tmp_api_sig;
+    bool ret = true;
+    params["api_key"] = api_key;
+    params["sk"] = sk;
+    params["track"] = title;
+    params["artist"] = artist;
+    if(!album.empty())
+      params["album"] = album;
+    if(up_down)
+      params["method"] = "track.love";
+    else
+      params["method"] = "track.unlove";
+
+    tmp_api_sig = gen_apisig(params,api_secret);
+    params["api_sig"] = tmp_api_sig;
+
+    post_fields = gen_qrystr(params);
+
+    curl_global_init(CURL_GLOBAL_ALL);
+
+    love_req = curl_easy_init();
+
+    if(love_req){
+      curl_easy_setopt(love_req, CURLOPT_URL,"http://ws.audioscrobbler.com/2.0/");
+      curl_easy_setopt(love_req, CURLOPT_FOLLOWLOCATION, 1L);
+      curl_easy_setopt(love_req, CURLOPT_POSTFIELDS,post_fields.c_str());
+      curl_easy_setopt(love_req, CURLOPT_WRITEFUNCTION, curl_no_output);
+
+      if(curl_easy_perform(love_req) != CURLE_OK){
+        //              fprintf(stderr, "lastfm love failed: %s\n", curl_easy_strerror(res));
+        ret = false;
+      }
+      curl_easy_cleanup(love_req);
+    }
+    curl_global_cleanup();
+
+    return ret;
+  }
 
   bool scrobble(string title,string artist, string album){
     if(!_has_lastfm())

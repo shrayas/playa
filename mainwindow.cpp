@@ -33,6 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
     player::play_toggled = std::bind(&MainWindow::on_play_toggled, this, _1);
     player::end_reached = std::bind(&MainWindow::on_end_reached, this, _1);
     player::media_changed = std::bind(&MainWindow::on_media_changed, this, _1);
+    player::reset_gui = std::bind(&MainWindow::on_reset_gui, this, _1);
 
     ui->media_item_tableWidget->setColumnCount(3);
 
@@ -43,7 +44,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->media_item_tableWidget->setHorizontalHeaderItem(
         2,new QTableWidgetItem(QString("Album"),QTableWidgetItem::Type));
 
-    manager::db_EXECUTE("SELECT title,album,artist,rowid FROM tracks"
+    manager::db_EXECUTE("SELECT title,album,artist,t.rowid FROM tracks AS t;"
         ,c_new_media_to_list,this);
     ui->media_item_tableWidget->resizeColumnsToContents();
 
@@ -83,6 +84,7 @@ void MainWindow::find_next_track(int){
 
 void MainWindow::new_media_to_list(map<string, string> media_data){
   int row_no = ui->media_item_tableWidget->rowCount();
+  string thumbs_rating = "";
   ui->media_item_tableWidget->insertRow(row_no);
 
   // set the title and add set the sqlite rowid as the a data
@@ -128,6 +130,18 @@ void MainWindow::on_media_changed(map<string,string> track_data){
   if(track_data["artist"] != "")
     ui->artist_lbl->setText(QString(track_data["artist"].c_str()));
   else
+    ui->artist_lbl->setText(artist_lbl_def);
+
+  ui->up_bt->setEnabled(true);
+  if(track_data["rating"] == "5")
+      ui->up_bt->setChecked(true);
+}
+
+void MainWindow::on_reset_gui(int){
+    ui->up_bt->setEnabled(false);
+    ui->up_bt->setChecked(false);
+
+    ui->title_lbl->setText(title_lbl_def);
     ui->artist_lbl->setText(artist_lbl_def);
 }
 // player EVENTS END
@@ -179,4 +193,13 @@ void MainWindow::on_settings_bt_clicked(){
   settings->show();
 }
 
+void MainWindow::on_up_bt_released(){
+
+  if (ui->up_bt->isChecked())
+    player::track_up(true);
+  else
+    player::track_up(false);
+
+}
 // SLOTS END
+

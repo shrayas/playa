@@ -44,8 +44,9 @@ class MainWindow : public QMainWindow
     void on_time_slider_sliderReleased();
     void on_prev_bt_clicked();
     void on_next_bt_clicked();
+    void on_up_bt_released();
 
-  private:
+private:
     Ui::MainWindow *ui;
     int current_item_row_id = 0;
     int current_row_id = 0;
@@ -62,6 +63,7 @@ class MainWindow : public QMainWindow
     void on_play_toggled(int);
     void on_end_reached(int);
     void on_media_changed(map<string,string>);
+    void on_reset_gui(int);
 
 };
 

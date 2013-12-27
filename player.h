@@ -26,12 +26,14 @@ namespace player{
   void player_shutdown();
   void callback(const libvlc_event_t*, void *);
   void setup_mp();
+  int track_up(bool);
 
   // callback registrants
   extern function <void(float)> time_changed;
   extern function <void(int)> play_toggled;
   extern function <void(int)> end_reached;
   extern function <void(std::map<string,string>)> media_changed;
+  extern function <void(int)> reset_gui;
 
   extern int is_playing;
   extern string current_track_loc;
