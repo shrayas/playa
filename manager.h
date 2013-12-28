@@ -18,7 +18,7 @@ namespace manager{
   void manager_init();
   void manager_shutdown();
 
-  void get_new_media_files(string);
+  void get_new_media_files();
   string search_friendly(string);
   string sanitize_track_data(TagLib::String,string);
 
@@ -31,6 +31,7 @@ namespace manager{
   extern string db_MIGRATE[3];
   extern sqlite3 *db;
   extern string db_file_name;
+  extern string watch_dir;
 
 }
 

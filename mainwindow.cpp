@@ -25,10 +25,8 @@ MainWindow::MainWindow(QWidget *parent) :
     lastfm_helper::lastfm_helper_init();
     lastfm_helper::on_user_should_auth = 
       std::bind(&MainWindow::open_browser_to_auth,this,_1);
-    //    lastfm_helper::authenticate();
 
-    // move this to settings
-    // manager::get_new_media_files("/media/karthik/Out/Music");
+    //    std::async(std::launch::async,manager::get_new_media_files);
     player::time_changed = std::bind(&MainWindow::on_time_changed, this, _1);
     player::play_toggled = std::bind(&MainWindow::on_play_toggled, this, _1);
     player::end_reached = std::bind(&MainWindow::on_end_reached, this, _1);
@@ -134,15 +132,15 @@ void MainWindow::on_media_changed(map<string,string> track_data){
 
   ui->up_bt->setEnabled(true);
   if(track_data["rating"] == "5")
-      ui->up_bt->setChecked(true);
+    ui->up_bt->setChecked(true);
 }
 
 void MainWindow::on_reset_gui(int){
-    ui->up_bt->setEnabled(false);
-    ui->up_bt->setChecked(false);
+  ui->up_bt->setEnabled(false);
+  ui->up_bt->setChecked(false);
 
-    ui->title_lbl->setText(title_lbl_def);
-    ui->artist_lbl->setText(artist_lbl_def);
+  ui->title_lbl->setText(title_lbl_def);
+  ui->artist_lbl->setText(artist_lbl_def);
 }
 // player EVENTS END
 

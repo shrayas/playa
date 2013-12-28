@@ -1,5 +1,11 @@
 #include "manager.h"
 
+static int c_set_watch_dir(void *, int , char **argv, char **) {
+  manager::watch_dir = string(argv[0]);
+  return 1;
+}
+
+
 namespace manager{
 
   string db_MIGRATE[3] =
@@ -33,6 +39,7 @@ namespace manager{
 
   sqlite3 *db = nullptr;
   string db_file_name = "/home/karthik/.config/playa/storage.db3";
+  string watch_dir;
 
   void manager_init() {
 
@@ -45,10 +52,12 @@ namespace manager{
     for(string sql: db_MIGRATE)
       db_EXECUTE(sql);
 
+    db_EXECUTE("SELECT value FROM config_vars WHERE key = 'watch_dir';",c_set_watch_dir,0);
+
   }
 
-  void get_new_media_files(string file_path){
-    if (nftw(file_path.c_str(), manager::get_file_info, 20, FTW_DEPTH|FTW_PHYS) 
+  void get_new_media_files(){
+    if (nftw(watch_dir.c_str(), manager::get_file_info, 20, FTW_DEPTH|FTW_PHYS)
         == -1) {
       printf("some error =======/n ");
     }

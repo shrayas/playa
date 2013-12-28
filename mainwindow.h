@@ -33,10 +33,10 @@ class MainWindow : public QMainWindow
     ~MainWindow();
     void new_media_to_list(map<string, string>);
     settingswindow *settings;
-    
 
-   private slots:
-    void on_play_bt_clicked();
+
+    private slots:
+      void on_play_bt_clicked();
     void on_media_item_tableWidget_itemDoubleClicked(QTableWidgetItem *item);
     void on_settings_bt_clicked();
     void on_time_slider_valueChanged(int value);
@@ -46,7 +46,7 @@ class MainWindow : public QMainWindow
     void on_next_bt_clicked();
     void on_up_bt_released();
 
-private:
+  private:
     Ui::MainWindow *ui;
     int current_item_row_id = 0;
     int current_row_id = 0;

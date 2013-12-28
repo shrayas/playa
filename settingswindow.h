@@ -1,8 +1,11 @@
 #ifndef SETTINGSWINDOW_H
 #define SETTINGSWINDOW_H
 
+#include <future>
 #include <QDialog>
+#include <QFileDialog>
 #include "manager.h"
+#include "lastfm_helper.h"
 
 namespace Ui {
   class settingswindow;
@@ -17,7 +20,9 @@ class settingswindow : public QDialog
     ~settingswindow();
 
   private slots:
-      void on_settings_btbx_accepted();
+    void on_settings_btbx_accepted();
+    void on_folder_browse_clicked();
+    void on_lastfm_auth_bt_clicked();
 
   private:
     Ui::settingswindow *ui;

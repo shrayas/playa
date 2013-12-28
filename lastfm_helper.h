@@ -34,5 +34,10 @@ namespace lastfm_helper
   string gen_apisig(map<string,string>,string);
 
   extern function <void(string)> on_user_should_auth;
+
+  extern string username;
+  extern string api_key;
+  extern string api_secret;
+
 }
 #endif // LASTFM_HELPER_H

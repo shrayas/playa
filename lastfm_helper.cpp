@@ -12,7 +12,7 @@ size_t static curl_no_output(void *, size_t , size_t , void *){
 
 namespace lastfm_helper{
   function <void(string)> on_user_should_auth = nullptr;
-  string username = "";
+  string username;
   string api_key = "";
   string api_secret = "";
   string sk = "";
@@ -20,13 +20,13 @@ namespace lastfm_helper{
 
   static int _setup_vars(void *, int , char **argv, char**){
     if(string(argv[0]) == "lastfm_api_key")
-      lastfm_helper::api_key = argv[1] ? string(argv[1]) : NULL;
+      api_key = argv[1] ? string(argv[1]) : NULL;
     if(string(argv[0]) == "lastfm_api_secret")
-      lastfm_helper::api_secret = argv[1]? string(argv[1]) : NULL;
+      api_secret = argv[1]? string(argv[1]) : NULL;
     if(string(argv[0]) == "lastfm_api_sk")
-      lastfm_helper::sk = argv[1] ? string(argv[1]) : NULL;
+      sk = argv[1] ? string(argv[1]) : NULL;
     if(string(argv[0]) == "lastfm_api_username")
-      lastfm_helper::username = argv[1] ? string(argv[1]) : NULL;
+      username = argv[1] ? string(argv[1]) : NULL;
 
     return 0;
   }
