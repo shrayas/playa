@@ -87,7 +87,7 @@ namespace player{
     scrobbled = false;
     reset_gui(0);
 
-    db_EXECUTE("SELECT t.title AS title, t.album AS album, t.artist AS artist, tud.rating AS rating FROM tracks AS t INNER JOIN tracks_user_data AS tud ON tud.rowid = t.rowid WHERE t.file_path = '"+path+"'",c_media_changed_cb,0);
+    db_EXECUTE("SELECT t.title AS title, t.album AS album, t.artist AS artist,t.duration , tud.rating AS rating FROM tracks AS t INNER JOIN tracks_user_data AS tud ON tud.rowid = t.rowid WHERE t.file_path = '"+path+"'",c_media_changed_cb,0);
 
     return 1;
   }
@@ -168,5 +168,29 @@ namespace player{
         printf("there seems to be an error \n");
         break;
     }
+  }
+
+  string to_duration(int second){
+
+    int hour,minute;
+    string duration;
+
+    hour=minute=0;
+
+    if(second > 60){
+      minute = second/60;
+      second%= 60;
+      if(minute > 60){
+        hour = minute/60;
+        minute%= 60;
+      }
+    }
+
+    // TODO : show leading 0
+    duration = to_string(minute) + ":" + to_string(second);
+    if(hour > 0)
+      duration = to_string(hour) + ":" + duration;
+
+    return duration;
   }
 }

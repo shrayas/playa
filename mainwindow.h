@@ -9,6 +9,7 @@
 #include <QString>
 
 #include <random>
+#include <stdlib.h>
 
 #include "player.h"
 #include "manager.h"

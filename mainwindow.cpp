@@ -105,6 +105,8 @@ void MainWindow::open_browser_to_auth(string Url){
 void MainWindow::on_time_changed(float time){
   if(!slider_pressed)
     ui->time_slider->setValue(ui->time_slider->maximum() * time);
+
+  ui->time_done->setText(QString::fromStdString(player::to_duration(atoi(player::track_data["duration"].c_str()) * time)));
 }
 
 void MainWindow::on_play_toggled(int play_state){
@@ -120,6 +122,8 @@ void MainWindow::on_play_toggled(int play_state){
 void MainWindow::on_end_reached(int){
   ui->title_lbl->setText(title_lbl_def);
   ui->artist_lbl->setText(artist_lbl_def);
+  ui->time_done->setText("--");
+  ui->time_total->setText("--");
   find_next_track(-1);
 }
 
@@ -133,6 +137,8 @@ void MainWindow::on_media_changed(map<string,string> track_data){
   ui->up_bt->setEnabled(true);
   if(track_data["rating"] == "5")
     ui->up_bt->setChecked(true);
+
+  ui->time_total->setText(QString::fromStdString(player::to_duration(atoi(track_data["duration"].c_str()))));
 }
 
 void MainWindow::on_reset_gui(int){

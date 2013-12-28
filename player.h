@@ -27,6 +27,7 @@ namespace player{
   void callback(const libvlc_event_t*, void *);
   void setup_mp();
   int track_up(bool);
+  string to_duration(int);
 
   // callback registrants
   extern function <void(float)> time_changed;
