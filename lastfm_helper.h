@@ -29,7 +29,6 @@ namespace lastfm_helper
 
   bool track_love(bool,string,string,string);
   bool scrobble(string,string,string);
-
   string gen_qrystr(map<string,string>);
   string gen_apisig(map<string,string>,string);
 

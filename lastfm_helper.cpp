@@ -1,11 +1,16 @@
 #include "lastfm_helper.h"
 
-// get the response from the curl request, returns a string
+/**
+ * curl callback, get the response from the curl request, returns a string
+ */
 size_t static curl_response_callback(void *buffer, size_t size, size_t nmemb, void *userdata)
 {
   *(string**)userdata = (string *)buffer;
   return size * nmemb;
 }
+/**
+ * curl callback, returns an empty curl output, dont want it to printf either, blocks stuff
+ */
 size_t static curl_no_output(void *, size_t , size_t , void *){
   return 0;
 }
@@ -18,6 +23,9 @@ namespace lastfm_helper{
   string sk = "";
   string token = "";
 
+  /**
+   * callback to set the vars
+   */
   static int _setup_vars(void *, int , char **argv, char**){
     if(string(argv[0]) == "lastfm_api_key")
       api_key = argv[1] ? string(argv[1]) : NULL;
@@ -31,15 +39,24 @@ namespace lastfm_helper{
     return 0;
   }
 
+  /**
+   * set the variables
+   */
   bool lastfm_helper_init(){
     db_EXECUTE("SELECT key,value FROM config_vars WHERE key LIKE 'lastfm%'",lastfm_helper::_setup_vars,0);
     return true;
   }
 
+  /**
+   * bye
+   */
   bool lastfm_helper_shutdown() {
     return true;
   }
 
+  /**
+   * send curl request for lastfm to love/unlove track
+   */
   bool track_love(bool up_down, string title,string artist, string album){
     if(!_has_lastfm())
       return false;
@@ -52,6 +69,8 @@ namespace lastfm_helper{
     params["sk"] = sk;
     params["track"] = title;
     params["artist"] = artist;
+
+    // use the album param if its not empty
     if(!album.empty())
       params["album"] = album;
     if(up_down)
@@ -59,11 +78,14 @@ namespace lastfm_helper{
     else
       params["method"] = "track.unlove";
 
+    // crate the lastfm specific api_sig param
     tmp_api_sig = gen_apisig(params,api_secret);
     params["api_sig"] = tmp_api_sig;
 
+    // create it as a query string
     post_fields = gen_qrystr(params);
 
+    // the actual curl part
     curl_global_init(CURL_GLOBAL_ALL);
 
     love_req = curl_easy_init();
@@ -85,6 +107,9 @@ namespace lastfm_helper{
     return ret;
   }
 
+  /**
+   * scrobble the track
+   */
   bool scrobble(string title,string artist, string album){
     if(!_has_lastfm())
       return false;
@@ -134,17 +159,25 @@ namespace lastfm_helper{
     return ret;
   }
 
+  /**
+   * check if lastfm account is authenticated and we have a session availble
+   */
   bool _has_lastfm(){
     if(username == "" || sk == "")
       return false;
     return true;
   }
 
+  /**
+   * autheticate against lastfm
+   * follow: http://www.last.fm/api/desktopauth
+   */
   bool authenticate(){
     // well they are required
     if(api_key == "" || api_secret == "")
       return false;
 
+    // GET TOKEN starts
     CURL *rl_get_request_token;
     string token_response, sk_response, tmp_api_sig;
     int retry_count = 0;
@@ -180,9 +213,12 @@ namespace lastfm_helper{
 
     token = (string)(((Object)parse_string(token_response))["token"]);
 
+    // GET TOKEN ends
+
     // the user will have to login so as to auth the token
     on_user_should_auth("https://www.last.fm/api/auth/?api_key="+api_key+"&token="+token);
 
+    // GET SESSION starts
     getSession_urlparams["api_key"] = api_key;
     getSession_urlparams["method"] = "auth.getSession";
     getSession_urlparams["token"] = token;
@@ -209,7 +245,7 @@ namespace lastfm_helper{
         curl_easy_getinfo(rl_get_request_token, CURLINFO_HTTP_CODE, &http_code);
         curl_easy_cleanup(rl_get_request_token);
 
-        printf(" session data ==> %s \n",sk_response.c_str());
+        //        printf(" session data ==> %s \n",sk_response.c_str());
 
         sk_session_json = ((Object)parse_string(sk_response))["session"];
         string username = (string)sk_session_json["name"];
@@ -223,19 +259,24 @@ namespace lastfm_helper{
         retry_count++;
       }
     } while (retry_count < 5);
+    // GET SESSION ends
 
     if(sk != ""){
       manager::db_EXECUTE("INSERT OR REPLACE INTO config_vars(key,value) VALUES" \
-          "('lastfm_api_sk','"+ \
-          sk+"')" \
-          ",('lastfm_api_username','"+ \
-          username+"')" \
-          ";");
+                          "('lastfm_api_sk','"+ \
+                          sk+"')" \
+                          ",('lastfm_api_username','"+ \
+                          username+"')" \
+                          ";");
       return true;
     }
     return false;
   }
 
+  /**
+   * generate a query string
+   * TODO escape non-html chars
+   */
   string gen_qrystr(map<string,string> url_params){
     string qrystr = "";
     for (auto& param : url_params)
@@ -243,6 +284,10 @@ namespace lastfm_helper{
     return qrystr.substr(0,qrystr.length()-1);
   }
 
+  /**
+   * generate the lastfm api_sig
+   * follow: http://www.last.fm/api/desktopauth#6
+   */
   string gen_apisig(map<string,string> url_params, string api_secret){
     unsigned char digest[MD5_DIGEST_LENGTH];
     string api_sig = "";

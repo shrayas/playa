@@ -1,5 +1,8 @@
 #include "player.h"
 
+/**
+  sqlite callback for setting the current track
+ */
 static int c_set_media_cb(void *, int , char **argv, char **) {
   player::current_track_loc = string(argv[0]);
   player::current_track_rowid = string(argv[1]);
@@ -7,6 +10,9 @@ static int c_set_media_cb(void *, int , char **argv, char **) {
   return 1;
 }
 
+/**
+  sqlite callback on track change, set the track_data
+ */
 static int c_media_changed_cb(void *, int argc, char **argv, char**azColName){
   for(int i=0; i<argc; i++)
     player::track_data[azColName[i]] = argv[i] ? argv[i] : NULL;
@@ -31,8 +37,11 @@ namespace player{
   string current_track_rowid;
   map<string,string> track_data;
   bool scrobbled = false;
-  // global @TODO: return a proper true/false/int 
+  // global @TODO: return a proper true/false/int
 
+  /**
+    setup
+   */
   void player_init() {
     inst = libvlc_new (0, NULL);
     mp = libvlc_media_player_new(inst);
@@ -40,6 +49,9 @@ namespace player{
     is_playing = -1;
   }
 
+  /**
+    play and increase the play_count in the db
+   */
   int play(void){
     libvlc_media_player_play(mp);
     inc_playcount(current_track_rowid);
@@ -48,6 +60,9 @@ namespace player{
     return 1;
   }
 
+  /**
+    pause
+   */
   int pause(void){
     libvlc_media_player_pause(mp);
 
@@ -56,6 +71,9 @@ namespace player{
     return 1;
   }
 
+  /**
+    setup the libvlc mp events
+   */
   void setup_mp(){
     event = libvlc_media_player_event_manager(mp);
 
@@ -67,12 +85,16 @@ namespace player{
     libvlc_event_attach(event, libvlc_MediaPlayerEncounteredError, player::callback, 0);
   }
 
+  /**
+    set a new track to play
+   */
   int set_media(string path){
-    // forced to clear the frigging instance because when the state libvlc_Ended is reached 
-    // vlc_cond_wait goes into an infinite loop .. follow WaitUnused func... 
+    // forced to clear the frigging instance because when the state libvlc_Ended is reached
+    // vlc_cond_wait goes into an infinite loop .. follow WaitUnused func...
     // @TODO investigate and fix
     if(libvlc_media_player_get_state(mp) != libvlc_Ended)
       libvlc_media_player_release(mp);
+
     libvlc_release (inst);
     inst = libvlc_new (0, NULL);
 
@@ -92,16 +114,26 @@ namespace player{
     return 1;
   }
 
+  /**
+    set the new track to play
+    given a rowid
+   */
   int set_media(int row_id){
     string qr = "SELECT file_path,rowid FROM tracks WHERE rowid = "+std::to_string(row_id);
     db_EXECUTE(qr,c_set_media_cb,0);
     return 0;
   }
 
+  /**
+    seek to a track position b/w 0 to 1
+   */
   void seek_to(float position){
     libvlc_media_player_set_position(mp,position);
   }
 
+  /**
+    bye bye
+   */
   void player_shutdown(void) {
     libvlc_media_player_stop (mp);
 
@@ -110,66 +142,79 @@ namespace player{
     libvlc_release (inst);
   }
 
+  /**
+    run query to increase the playcount
+   */
   int inc_playcount(std::string row_id){
     // if update fails do an insert
-    if (db_EXECUTE("UPDATE tracks_user_data SET playcount = playcount + 1 WHERE track_id = "+row_id) 
+    if (db_EXECUTE("UPDATE tracks_user_data SET playcount = playcount + 1 WHERE track_id = "+row_id)
         == 0){
       db_EXECUTE("INSERT INTO tracks_user_data(track_id,playcount) VALUES("+row_id+",1); ");
     }
     return 1;
   }
 
+  /**
+    thumbs a track
+   */
   int track_up(bool up_down){
 
+    // save thumbs_up in db
     if(up_down)
       db_EXECUTE("UPDATE tracks_user_data SET rating = 5 WHERE track_id = "+current_track_rowid);
     else
       db_EXECUTE("UPDATE tracks_user_data SET rating = 0 WHERE track_id = "+current_track_rowid);
 
-    //      lastfm_helper::track_love(up_down,track_data["title"],track_data["artist"],track_data["album"]);
+    // send lastfm love req
     std::async(std::launch::async,lastfm_helper::track_love,up_down,track_data["title"],track_data["artist"],track_data["album"]);
 
     return 1;
   }
 
+  /**
+    on libvlc events
+   */
   void callback(const libvlc_event_t *event, void *)
   {
     switch(event->type){
       case libvlc_MediaPlayerEndReached:
-        {
-          end_reached(0);
-          scrobbled = false;
-          reset_gui(0);
-          break;
-        }
+      {
+        end_reached(0);
+        scrobbled = false;
+        break;
+      }
       case libvlc_MediaPlayerPaused:
-        {
-          play_toggled(0);
-          break;
-        }
+      {
+        play_toggled(0);
+        break;
+      }
       case libvlc_MediaPlayerPlaying:
-        {
-          play_toggled(1);
-          break;
-        }
+      {
+        play_toggled(1);
+        break;
+      }
       case libvlc_MediaPlayerPositionChanged:
-        {
-          float post = libvlc_media_player_get_position(player::mp);
-          // scrobble track when crossed half the length
-          // yeah there are known issues...
-          if(post > 0.5 && scrobbled == false){
-            std::async(std::launch::async,lastfm_helper::scrobble,track_data["title"],track_data["artist"],track_data["album"]);
-            scrobbled = true;
-          }
-          time_changed(post);
-          break;
+      {
+        float post = libvlc_media_player_get_position(player::mp);
+        // scrobble track when crossed half the length
+        // yeah there are known issues...
+        if(post > 0.5 && scrobbled == false){
+          std::async(std::launch::async,lastfm_helper::scrobble,track_data["title"],track_data["artist"],track_data["album"]);
+          scrobbled = true;
         }
+        time_changed(post);
+        break;
+      }
       default:
         printf("there seems to be an error \n");
         break;
     }
   }
 
+  /**
+    convert seconds to duration string
+    ex: "160 to 2:40"
+   */
   string to_duration(int second){
 
     int hour,minute;

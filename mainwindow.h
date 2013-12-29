@@ -26,18 +26,18 @@ namespace Ui {
 
 class MainWindow : public QMainWindow
 {
-  Q_OBJECT
+    Q_OBJECT
 
   public:
     explicit MainWindow(QWidget *parent = 0);
-    void open_browser_to_auth(string);
     ~MainWindow();
     void new_media_to_list(map<string, string>);
     settingswindow *settings;
+    void open_browser_to_auth(string);
 
-
-    private slots:
-      void on_play_bt_clicked();
+    // slots are qt events
+  private slots:
+    void on_play_bt_clicked();
     void on_media_item_tableWidget_itemDoubleClicked(QTableWidgetItem *item);
     void on_settings_bt_clicked();
     void on_time_slider_valueChanged(int value);
