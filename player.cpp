@@ -37,13 +37,17 @@ namespace player{
   string current_track_rowid;
   map<string,string> track_data;
   bool scrobbled = false;
+  char const* vlc_argv[] = {
+    "--ignore-config" // libvlc loads the system specific config file which is used by vlc too, avoid it, we dont have any use of a config (yet)
+  };
+  int vlc_argc = sizeof(vlc_argv) / sizeof(*vlc_argv);
   // global @TODO: return a proper true/false/int
 
   /**
     setup
    */
   void player_init() {
-    inst = libvlc_new (0, NULL);
+    inst = libvlc_new (vlc_argc, vlc_argv);
     mp = libvlc_media_player_new(inst);
     // create one the first time just to release variables when the 1st track is played
     is_playing = -1;
@@ -96,7 +100,7 @@ namespace player{
       libvlc_media_player_release(mp);
 
     libvlc_release (inst);
-    inst = libvlc_new (0, NULL);
+    inst = libvlc_new (vlc_argc, vlc_argv);
 
     mp = libvlc_media_player_new(inst);
     setup_mp();
