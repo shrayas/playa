@@ -77,6 +77,18 @@
     <ClCompile Include="Release\moc_settingswindow.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
+    <ClCompile Include="lastfm\lastfm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="mgr\mgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Debug\moc_mgr.cpp">
+      <Filter>Generated Files\Debug</Filter>
+    </ClCompile>
+    <ClCompile Include="Release\moc_mgr.cpp">
+      <Filter>Generated Files\Release</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="lastfm_helper.h">
@@ -100,6 +112,9 @@
     <ClInclude Include="GeneratedFiles\ui_settingswindow.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
+    <ClInclude Include="lastfm\lastfm.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="mainwindow.ui">
@@ -107,6 +122,9 @@
     </CustomBuild>
     <CustomBuild Include="settingswindow.ui">
       <Filter>Form Files</Filter>
+    </CustomBuild>
+    <CustomBuild Include="mgr\mgr.h">
+      <Filter>Header Files</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>
