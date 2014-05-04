@@ -11,6 +11,8 @@ vlc_instance = vlc.Instance()
 vlc_mediaplayer = vlc_instance.media_player_new()
 
 def play(track_loc):
+        global playlist,playlist_pos
+
         if (track_loc is None) or (len(track_loc) == 0):
                 vlc_mediaplayer.play()
         playlist.append(track_loc)
@@ -19,17 +21,18 @@ def play(track_loc):
         return 1;
 
 def pause():
+
         vlc_mediaplayer.pause()
         return 1;
 
-# TODO, debug this doesn't work
 def skip(pos):
+        global playlist_pos
+
         track_loc = ""
+        new_pos = playlist_pos + 1*pos
         try : 
-                if pos == -1 :
-                        track_loc = playlist[playlist_pos - 1]
-                else :
-                        track_loc = playlist[playlist_pos + 1]
+                track_loc = playlist[new_pos]
+                playlist_pos = new_pos
         except IndexError:
                 print "no track available"
 
@@ -37,6 +40,8 @@ def skip(pos):
         return 1;
 
 def enqueue(track_loc):
+        global playlist
+
         playlist.append(track_loc)
         return 1;
 
