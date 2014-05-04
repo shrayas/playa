@@ -1,14 +1,7 @@
+# TODO make it a class
+
 import vlc
 
-playlist = []
-
-playlist_pos = 0
-
-Player = vlc.MediaPlayer()
-
-vlc_instance = vlc.Instance()
-
-vlc_mediaplayer = vlc_instance.media_player_new()
 
 def play(track_loc):
         global playlist,playlist_pos
@@ -54,3 +47,20 @@ def _play_track(track_loc):
         vlc_mediaplayer.play()
         print track_loc 
         return 1
+
+def _media_endreached(event):
+        skip(1)
+
+playlist = []
+
+playlist_pos = 0
+
+Player = vlc.MediaPlayer()
+
+vlc_instance = vlc.Instance()
+
+vlc_mediaplayer = vlc_instance.media_player_new()
+
+vlc_events = vlc_mediaplayer.event_manager()
+vlc_events.event_attach(vlc.EventType.MediaPlayerEndReached, _media_endreached)
+
