@@ -6,4 +6,5 @@
 cd /d %~dp0
 
 :: start via the venv python
-start /B env\Scripts\python.exe src\playa.py %*
+start /B env\Scripts\pythonw.exe src\playa.py %*
+
