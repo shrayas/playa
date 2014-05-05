@@ -332,3 +332,7 @@ docs/_build/
 [Ii]nclude
 [Ll]ib
 [Ss]cripts
+
+## REPO SPECIFIC
+
+config.py

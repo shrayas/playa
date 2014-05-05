@@ -1,16 +1,16 @@
 import vlc
+import lastfm
 
 class TrackHandler:
 
 
     def play(self,track_loc):
-
         if (track_loc is None) or (len(track_loc) == 0):
             self.vlc_mediaplayer.play()
             self.playlist.append(track_loc)
             self.playlist_pos = len(self.playlist) - 1
             __play_track__(track_loc) 
-            return 1;
+        return 1;
 
     def pause(self):
 
