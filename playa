@@ -1,0 +1,11 @@
+#!/bin/bash
+
+# Get the root directory of the script
+# Look at http://stackoverflow.com/a/246128/235055 for more info
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Move to the dir
+cd $SCRIPT_DIR
+
+# Use python from virtualenv to play. This includes all packages
+env/bin/python src/playa.py $* &
