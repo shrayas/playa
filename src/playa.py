@@ -46,15 +46,17 @@ if __name__ == '__main__':
         try:
                 s.bind((HOST,PORT))
                 receive(params)
-                print "connected to sock"
                 while 1:
                         data,addr = s.recvfrom(1024)
                         if not receive(data):
                                break
                 s.close()
                 print "( ^_^)/"
-        except socket.error as msg:
-                print "sock in use"
-                s.bind(("",0))
-                s.sendto(params,(HOST,PORT))
-                s.close()
+        except socket.error as e:
+                # Socket already bound to so just connect and send
+                if e.errno == 48:
+                    s.connect((HOST, PORT))
+                    s.send(params)
+                    s.close()
+                else:
+                    print e
