@@ -1,7 +1,38 @@
 # TODO make it a class
 
+import os
+
 import vlc
 
+from fuzzywuzzy import process
+
+def play_from_index(filename):
+        global index
+
+        file_key = process.extractOne(filename, index.keys())
+
+        if file_key:
+            print "playing: %s" % file_key[0]
+            play(index[file_key[0]])
+            return 1
+        else:
+            return 0
+
+def index_dir(path):
+        global index
+
+        try:
+            for root, dirs, files in os.walk(path):
+
+                for f in files:
+                    if f.lower().endswith(('.m4a','.mp3','.aac')):
+                        index[f] = os.path.join(root, f)
+
+            #print "indexed [%s]. No. of items: %s" % (path, len(index))
+            return 1
+
+        except:
+            return 0
 
 def play(track_loc):
         global playlist,playlist_pos
@@ -50,6 +81,8 @@ def _play_track(track_loc):
 
 def _media_endreached(event):
         skip(1)
+
+index = {}
 
 playlist = []
 

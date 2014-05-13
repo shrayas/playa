@@ -1,17 +1,16 @@
-"""Usage: playa.py (play | pause | quit | queue | next | prev) [FILE]
-
+"""
 Playa, play an audio file.
 
-Arguments:
-  play [FILE] play audio
-  queue [FILE] queue track 
-  pause pause
-  next goto next track
-  prev goto prev track
-  quit quit
-
-Options:
-  -h --help
+Usage: 
+    playa.py play FILE
+    playa.py play_index FILE
+    playa.py pause
+    playa.py queue FILE
+    playa.py next
+    playa.py prev
+    playa.py index DIR
+    playa.py (-h | --help)
+    playa.py quit
 
 """
 
@@ -30,6 +29,8 @@ def receive(data_json):
 #        print data
         if data['play']:
                 return track_handler.play(data['FILE'])
+        elif data['play_index']:
+                return track_handler.play_from_index(data['FILE'])
         elif data['pause']:
                 return track_handler.pause()
         elif data['next']:
@@ -38,6 +39,8 @@ def receive(data_json):
                 return track_handler.skip(-1)
         elif data['queue']:
                 return track_handler.enqueue(data['FILE'])
+        elif data['index']:
+                return track_handler.index_dir(data['DIR'])
         elif data['quit']:
                 return 0 
 
