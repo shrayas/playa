@@ -18,15 +18,15 @@ Options:
 import socket
 import json
 from docopt import docopt
-
+import track_handler
 
 PORT = 10165 # TODO make configurable
 HOST = "localhost"
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 def receive(data_json):
-        import track_handler
         data = json.loads(data_json)
+        track_handler = TrackHandler()
 #        print data
         if data['play']:
                 return track_handler.play(data['FILE'])
