@@ -35,7 +35,7 @@ class TrackHandler:
         self.playlist.append(track_loc)
         return 1;
 
-    def __play_track(self,track_loc):
+    def __play_track__(self,track_loc):
         if (track_loc is None) or (len(track_loc) == 0):
             return -1
         self.vlc_mediaplayer.stop()
@@ -45,7 +45,7 @@ class TrackHandler:
         print track_loc 
         return 1
 
-    def __media_endreached(self,event):
+    def __media_endreached__(self,event):
         self.skip(1)
 
     def __init__(self):
@@ -55,5 +55,6 @@ class TrackHandler:
         self.Player = vlc.MediaPlayer()
         self.vlc_mediaplayer = vlc_instance.media_player_new()
         self.vlc_events = vlc_mediaplayer.event_manager()
-        self.vlc_events.event_attach(vlc.EventType.MediaPlayerEndReached, __media_endreached)
+        self.vlc_events.event_attach(vlc.EventType.MediaPlayerEndReached, 
+                __media_endreached)
 
