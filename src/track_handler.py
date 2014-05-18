@@ -9,7 +9,7 @@ class TrackHandler:
             self.vlc_mediaplayer.play()
             self.playlist.append(track_loc)
             self.playlist_pos = len(self.playlist) - 1
-            __play_track(track_loc) 
+            __play_track__(track_loc) 
             return 1;
 
     def pause(self):
@@ -27,7 +27,7 @@ class TrackHandler:
         except IndexError:
             print "no track available"
 
-        __play_track(track_loc)
+        __play_track__(track_loc)
         return 1;
 
     def enqueue(self,track_loc):
@@ -56,5 +56,5 @@ class TrackHandler:
         self.vlc_mediaplayer = vlc_instance.media_player_new()
         self.vlc_events = vlc_mediaplayer.event_manager()
         self.vlc_events.event_attach(vlc.EventType.MediaPlayerEndReached, 
-                __media_endreached)
+                __media_endreached__)
 
