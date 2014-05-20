@@ -18,26 +18,27 @@ Options:
 import socket
 import json
 from docopt import docopt
-import track_handler
+from track_handler import TrackHandler
 
 PORT = 10165 # TODO make configurable
 HOST = "localhost"
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        
+th = TrackHandler()
 
 def receive(data_json):
         data = json.loads(data_json)
-        track_handler = TrackHandler()
 #        print data
         if data['play']:
-                return track_handler.play(data['FILE'])
+                return th.play(data['FILE'])
         elif data['pause']:
-                return track_handler.pause()
+                return th.pause()
         elif data['next']:
-                return track_handler.skip(1)
+                return th.skip(1)
         elif data['prev']:
-                return track_handler.skip(-1)
+                return th.skip(-1)
         elif data['queue']:
-                return track_handler.enqueue(data['FILE'])
+                return th.enqueue(data['FILE'])
         elif data['quit']:
                 return 0 
 

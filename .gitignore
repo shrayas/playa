@@ -335,4 +335,4 @@ docs/_build/
 
 ## REPO SPECIFIC
 
-config.py
+src/config.py

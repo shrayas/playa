@@ -1,10 +1,11 @@
 import requests
 import hashlib
+import time
 
 import config
 
 #def scrobble():
-# some code
+#    some code
 
 #def now_playing():
 # some code
@@ -12,22 +13,46 @@ import config
 #def love():
 # some code
 
-def __auth():
-    auth_payload = {
-            'username' : username,
-            'password' : password,
-            'api_key' : config.LASTFM_API_KEY,
-            'method' : "auth.getMobileSession",
-            }
-    auth_payload['api_sig'] = __gen_api_sig(auth_payload)
-    auth_payload['format'] = 'json'
+class LastFM:
+    
+    sk = ''
+    lastfm_endpoint = "https://ws.audioscrobbler.com/2.0/"
 
-    print auth_payload
-    r = requests.post("https://ws.audioscrobbler.com/2.0/",data=auth_payload)
-    print r.text
+    def scrobble(self,track,artist):
+        auth_payload = {
+                'track[0]' : track,
+                'artist[0]' : artist,
+                'timestamp[0]' : str(int(time.time())),
+                'api_key' : config.LASTFM_API_KEY,
+                'sk' : self.sk,
+                'method' : "track.scrobble",
+                }
 
-def __gen_api_sig(payload):
-    unhashed_sig = "".join('%s%s' % (k,v) for k,v in sorted(payload.items()))
+        auth_payload['api_sig'] = self.__gen_api_sig__(auth_payload)
+        auth_payload['format'] = 'json'
+
+        print auth_payload
+
+        r = requests.post(self.lastfm_endpoint,data=auth_payload)
+        print r.json()
+
+    def __init__(self):
+        auth_payload = {
+                'username' : config.LASTFM_USERNAME,
+                'password' : config.LASTFM_PASSWORD,
+                'api_key' : config.LASTFM_API_KEY,
+                'method' : "auth.getMobileSession",
+                }
+        auth_payload['api_sig'] = self.__gen_api_sig__(auth_payload)
+        auth_payload['format'] = 'json'
+
+        r = requests.post(self.lastfm_endpoint,data=auth_payload)
+        request_response = r.json()
+        self.sk = request_response['session']['key']
+
+    def __gen_api_sig__(self,payload):
+        # read http://www.last.fm/api/mobileauth#4
+        unhashed_sig = "".join('%s%s' % (k,v) for k,v in sorted(payload.items()))
 
         unhashed_sig += config.LASTFM_API_SECRET
 
