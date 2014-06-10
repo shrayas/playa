@@ -4,3 +4,5 @@
 
 # LASTFM_USERNAME = ''
 # LASTFM_PASSWORD = ''
+
+# DB_LOC = '_db'

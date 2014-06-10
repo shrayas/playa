@@ -336,3 +336,4 @@ docs/_build/
 ## REPO SPECIFIC
 
 src/config.py
+_db
