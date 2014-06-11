@@ -1,43 +1,52 @@
 import os.path
 
-from whoosh.index import create_in
+from whoosh.index import create_in, open_dir
 from whoosh.fields import *
 from whoosh.qparser import QueryParser
+from whoosh.query import Term 
+
+from mutagen.mp4 import MP4
+from mutagen.easymp4 import EasyMP4
+#from mutagen.oggopus import OggOpus
+#from mutagen.oggvorbis import OggVorbis
+from mutagen.easyid3 import EasyID3
 
 from config import DB_LOC
 
-ALLOWED_EXTS = [".mp3",".m4a",".ogg",".flac",".opus"]
+ALLOWED_EXTS = [".mp3",".m4a"]
 
 def create_schema():
 
-    schema = Schema(title=TEXT(stored=True), path=ID(stored=TRUE), 
-            artist=TEXT(stored=TRUE), album=TEXT(stored=TRUE))
+    print DB_LOC
+
+    schema = Schema(title=TEXT(stored=True), path=ID(stored=True), 
+            artist=TEXT(stored=True), album=TEXT(stored=True))
 
     if not os.path.exists(DB_LOC):
         os.mkdir(DB_LOC)
 
-    ix = create_in(DB_LOC)
+    ix = create_in(DB_LOC, schema)
 
 def search(title,artist,album):
     if not os.path.exists(DB_LOC):
         create_schema()
 
     ix = open_dir(DB_LOC)
-    
+
     with ix.searcher() as searcher:
-        query = QueryParser("title",ix.schema).parse(title)
+        qry = QueryParser("title",ix.schema).parse(title)
 
         if artist:
-            allow_q = query.Term("artist",artist)
+            allow_q = Term("artist",artist)
         elif album:
-            allow_q = query.Term("album",album)
+            allow_q = Term("album",album)
         else:
             allow_q = None
 
-        results = searcher.search(query,filter=allow_q)
+        results = searcher.search(qry,filter=allow_q)
 
         for result in results:
-            print result
+            print result['path']
 
 def index(directory):
     if not os.path.exists(DB_LOC):
@@ -47,10 +56,25 @@ def index(directory):
     
     w = ix.writer()
 
-#   TODO: ahem, get the meta data from the file and use it while inserting to the db
-#    for filename in __find_files__(directory):
-#        w.add_document()
+    for filename in __find_files__(directory):
+        _, file_ext = os.path.splitext(filename)
+        title = artist = album = ""
+        
+        if file_ext == ".mp3":
+            audio = EasyID3(filename)
+            title = audio["title"]
+            artist = audio["artist"]
+            album = audio["album"]
 
+        elif file_ext == ".m4a":
+            audio = EasyMP4(filename)
+            title = audio["title"]
+            artist = audio["artist"]
+            album = audio["album"]
+
+        w.add_document(title=unicode(title),artist=unicode(artist),album=unicode(album),path=unicode(filename))
+
+    w.commit()
 
 def __find_files__(directory):
     for root, dirs, files in os.walk(directory):

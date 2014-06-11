@@ -1,3 +1,4 @@
 Whoosh==2.6.0
 docopt==0.6.1
+mutagen==1.23
 requests==2.2.1
