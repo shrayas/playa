@@ -34,12 +34,12 @@ def search(title,artist,album):
     ix = open_dir(DB_LOC)
 
     with ix.searcher() as searcher:
-        qry = QueryParser("title",ix.schema).parse(title)
+        qry = QueryParser("title",ix.schema).parse(unicode(title))
 
         if artist:
-            allow_q = Term("artist",artist)
+            allow_q = Term("artist",unicode(artist))
         elif album:
-            allow_q = Term("album",album)
+            allow_q = Term("album",unicode(album))
         else:
             allow_q = None
 
@@ -59,26 +59,33 @@ def index(directory):
     for filename in __find_files__(directory):
         _, file_ext = os.path.splitext(filename)
         title = artist = album = ""
-        
-        if file_ext == ".mp3":
-            audio = EasyID3(filename)
+      
+        try:
+            if file_ext == ".mp3":
+                audio = EasyID3(filename)
+            elif file_ext == ".m4a":
+                audio = EasyMP4(filename)
+
             title = audio["title"]
             artist = audio["artist"]
             album = audio["album"]
+        except Exception:
+            print "wow!! there was an error parsing ", filename
+            pass
 
-        elif file_ext == ".m4a":
-            audio = EasyMP4(filename)
-            title = audio["title"]
-            artist = audio["artist"]
-            album = audio["album"]
-
-        w.add_document(title=unicode(title),artist=unicode(artist),album=unicode(album),path=unicode(filename))
+        try :
+            w.add_document(title=unicode(title),artist=unicode(artist),album=unicode(album),path=unicode(filename))
+        except Exception:
+            print "wow!! there was an err inserting ", filename 
+            pass
 
     w.commit()
 
 def __find_files__(directory):
     for root, dirs, files in os.walk(directory):
         for basename in files:
+            if basename[0] == ".":
+                continue
             _, file_ext = os.path.splitext(basename)
             if file_ext in ALLOWED_EXTS:
                 filename = os.path.join(root,basename)
