@@ -19,14 +19,21 @@ Options:
 
 import socket
 import json
+import os
+import sys
 from docopt import docopt
+
 from track_handler import TrackHandler
 import search
 
 PORT = 10165 # TODO make configurable
 HOST = "localhost"
+PIDFILE = "playa.pid"
+
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        
+cur_dir = os.path.dirname(os.path.realpath(__file__))
+
+pid_absloc = os.path.join(cur_dir,PIDFILE)
 
 def receive(data_json):
         data = json.loads(data_json)
@@ -56,20 +63,32 @@ if __name__ == '__main__':
     else:
         th = TrackHandler()
         params = json.dumps(docopt(__doc__))
-        try:
+       
+        # we'll do it the good old way of checking a pid file, 
+        # sockets are waayyy to low level
+        if not os.path.isfile(pid_absloc):
+                
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 s.bind((HOST,PORT))
+                
                 receive(params)
+                
+                pid = str(os.getpid())
+
+                file(pid_absloc, 'w').write(pid)
+
                 while 1:
                         data,addr = s.recvfrom(1024)
                         if not receive(data):
                                break
+
+                s.shutdown(socket.SHUT_RDWR)
                 s.close()
+
+                os.unlink(PIDFILE)
                 print "( ^_^)/"
-        except socket.error as e:
-                # Socket already bound to so just connect and send
-                if e.errno == 48:
-                    s.connect((HOST, PORT))
-                    s.send(params)
-                    s.close()
-                else:
-                    print e
+        else:
+                s.connect((HOST, PORT))
+                s.send(params)
+                s.shutdown(socket.SHUT_RDWR)
+                s.close()

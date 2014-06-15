@@ -336,4 +336,5 @@ docs/_build/
 ## REPO SPECIFIC
 
 src/config.py
+src/playa.pid
 _db
